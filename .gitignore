@@ -1,29 +1,66 @@
-### Windows ###
-# Windows thumbnail cache files
-Thumbs.db
-ehthumbs.db
-ehthumbs_vista.db
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
 
-# Dump file
-*.stackdump
+# Folders
+_obj
+_test
 
-# Folder config file
-[Dd]esktop.ini
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
 
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
 
-# Windows Installer files
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
+_testmain.go
 
-# Windows shortcuts
-*.lnk
+*.exe
+*.test
+*.prof
 
-# Ignore our binary
-main.exe
+# WebStorm
+*.iml
 
-# End of https://www.gitignore.io/api/windows
+# Sublime Text
+.sublime-workspace
+
+# Directory-based project format:
+.idea/
+.idea/workspace.xml
+**/.idea/workspace.xml
+
+# mac hidden files
+.DS_Store
+
+#other
+node_modules/
+bower_components/
+.tmp
+.sass-cache
+builds/**/images/*
+*.ogg
+*.mp3
+*.mp4
+#*.png
+#*.jpeg
+
+# security / ssl
+*.pem
+*.xxjson
+
+
+# Anything under a tmp folder
+**/tmp/*
+
+# Don't include our binary
+lenslocked.com
+images/**
+
+.config
+notes/**
+.vscode/**
