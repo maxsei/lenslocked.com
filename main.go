@@ -20,6 +20,7 @@ func contact(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
