@@ -54,12 +54,14 @@ builds/**/images/*
 *.xxjson
 
 
-# Anything under a tmp folder
+# Ignore these folders
 **/tmp/*
+
 
 # Don't include our binary
 lenslocked.com
 images/**
+
 
 .config
 notes/**
