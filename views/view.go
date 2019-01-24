@@ -2,6 +2,7 @@ package views
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
 )
 
@@ -9,12 +10,6 @@ const (
 	layoutDir   string = "views/layouts/"
 	templateExt string = ".gohtml"
 )
-
-// View is a wrapper for an html template
-type View struct {
-	Template *template.Template
-	Layout   string
-}
 
 // NewView creates an instance of a view.View object
 func NewView(layout string, files ...string) *View {
@@ -31,4 +26,16 @@ func NewView(layout string, files ...string) *View {
 		Template: t,
 		Layout:   layout,
 	}
+}
+
+// View is a wrapper for an html template
+type View struct {
+	Template *template.Template
+	Layout   string
+}
+
+// Render is used to render a View to the http.ResponseWriter with
+// the View Layout and the data provided to fill in template mustaches
+func (v View) Render(w http.ResponseWriter, data interface{}) error {
+	return v.Template.ExecuteTemplate(w, v.Layout, nil)
 }
