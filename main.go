@@ -32,9 +32,10 @@ func main() {
 	usersCtrl := controllers.NewUsers()
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", home)
-	r.HandleFunc("/contact", contact)
-	r.HandleFunc("/signup", usersCtrl.New)
+	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/contact", contact).Methods("GET")
+	r.HandleFunc("/signup", usersCtrl.New).Methods("GET")
+	r.HandleFunc("/signup", usersCtrl.Create).Methods("POST")
 	http.ListenAndServe(":8080", r)
 }
 
