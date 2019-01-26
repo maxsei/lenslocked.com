@@ -8,11 +8,13 @@ import (
 
 const (
 	layoutDir   string = "views/layouts/"
+	templateDir string = "views/"
 	templateExt string = ".gohtml"
 )
 
 // NewView creates an instance of a view.View object
 func NewView(layout string, files ...string) *View {
+	formatViewPaths(files)
 	layouts, err := filepath.Glob(layoutDir + "*" + templateExt)
 	if err != nil {
 		panic(err)
@@ -45,4 +47,15 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (v View) Render(w http.ResponseWriter, data interface{}) error {
 	w.Header().Set("Content-Type", "text/html")
 	return v.Template.ExecuteTemplate(w, v.Layout, nil)
+}
+
+// formatViewPath adds the views path to the passed in
+// file path strings for views that need to be created as well
+// as adding the .gohtml extension to the view strings passed
+//
+// i.e. "home" outputs "views/home.gohtml"
+func formatViewPaths(files []string) {
+	for i, f := range files {
+		files[i] = templateDir + f + templateExt
+	}
 }
