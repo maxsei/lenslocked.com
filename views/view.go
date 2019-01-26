@@ -34,8 +34,15 @@ type View struct {
 	Layout   string
 }
 
+func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := v.Render(w, nil); err != nil {
+		panic(err)
+	}
+}
+
 // Render is used to render a View to the http.ResponseWriter with
 // the View Layout and the data provided to fill in template mustaches
 func (v View) Render(w http.ResponseWriter, data interface{}) error {
+	w.Header().Set("Content-Type", "text/html")
 	return v.Template.ExecuteTemplate(w, v.Layout, nil)
 }
