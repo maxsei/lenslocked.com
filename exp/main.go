@@ -5,6 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"lenslocked.com/models"
 )
 
 const (
@@ -26,15 +27,12 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname,
 	)
-	db, err := gorm.Open("postgres", psqlInfo) //verifies if db works
+	us, err := models.NewUserService(psqlInfo) //verifies if db works
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-	if err := db.DB().Ping(); err != nil {
-		panic(err)
-	}
-
-	db.LogMode(true)
-	db.AutoMigrate(&User{})
+	defer us.Close()
+	us.DestructiveReset()
+	// user, err := us.ByID(1)
+	// fmt.Println(user)
 }
