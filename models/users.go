@@ -14,8 +14,13 @@ var (
 	ErrNotFound = errors.New("models: resource not found")
 	//ErrInvalidID describes when the user enters an invalid ID
 	ErrInvalidID = errors.New("models: ID provided was invalid")
-	//ErrDuplicateKey describes when the user enters an duplicate key
-	ErrDuplicateKey = errors.New("models: Unique key \"%s\" already exists")
+	//ErrExistingEmail describes when the user creates account with
+	// an email that already exists in the database
+	ErrExistingEmail = errors.New("models: email \"%s\" already exists")
+	// ErrInvalidEmail describes when the user logs in with an invalid email
+	ErrInvalidEmail = errors.New("models: invalid email address provided")
+	// ErrInvalidPassword describes	 when the user logs in with an incorrect passwrod
+	ErrInvalidPassword = errors.New("models: incorrect password provided")
 )
 
 const userPwPepper = "nubis"
@@ -58,6 +63,26 @@ func (us *UserService) ByEmail(email string) (*User, error) {
 	return &user, err
 }
 
+// Authenticate can be used to authenticate a user with a provided username
+// and password
+func (us *UserService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, ErrInvalidEmail
+	}
+	foundPasswordBytes := []byte(foundUser.PasswordHash)
+	enteredPasswordBytes := []byte(password + userPwPepper)
+	err = bcrypt.CompareHashAndPassword(foundPasswordBytes, enteredPasswordBytes)
+	switch err {
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	case nil:
+		return foundUser, nil
+	default:
+		return nil, err
+	}
+}
+
 // first will query using the provided gorm.DB and
 // will get the first item returned and place it into
 // dst.  It will return error not found if nothing is found
@@ -80,7 +105,7 @@ func (us *UserService) Create(user *User) error {
 	user.PasswordHash = string(hashBytes)
 	user.Password = ""
 	if err := us.db.Create(user).Error; err != nil {
-		return fmt.Errorf(ErrDuplicateKey.Error(), user.Email)
+		return fmt.Errorf(ErrExistingEmail.Error(), user.Email)
 	}
 	return nil
 }
