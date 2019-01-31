@@ -18,6 +18,8 @@ var (
 	ErrDuplicateKey = errors.New("models: Unique key \"%s\" already exists")
 )
 
+const userPwPepper = "nubis"
+
 //UserService details things that can be done with users
 type UserService struct {
 	db *gorm.DB
@@ -70,7 +72,8 @@ func first(db *gorm.DB, dst interface{}) error {
 // Create will create the provied user and back fill
 // the Id, createdAt, and Updataed At
 func (us *UserService) Create(user *User) error {
-	hashBytes, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	pwBytes := []byte(user.Password + userPwPepper)
+	hashBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
