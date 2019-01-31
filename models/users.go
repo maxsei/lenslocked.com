@@ -97,9 +97,16 @@ func (us *UserService) Close() error {
 }
 
 //DestructiveReset deletes and resets the Users table from the database
-func (us *UserService) DestructiveReset() {
-	us.db.DropTableIfExists(&User{})
-	us.db.AutoMigrate(&User{})
+func (us *UserService) DestructiveReset() error {
+	if err := us.db.DropTableIfExists(&User{}).Error; err != nil {
+		return err
+	}
+	return us.AutoMigrate()
+}
+
+// AutoMigrate will appempt to automatically migrate users table
+func (us *UserService) AutoMigrate() error {
+	return us.db.AutoMigrate(&User{}).Error
 }
 
 // User is a type that describes users on the site
