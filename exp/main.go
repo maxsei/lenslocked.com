@@ -27,22 +27,30 @@ func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname,
 	)
-	us, err := models.NewUserService(psqlInfo) //verifies if db works
+	us, err := models.NewUserService(psqlInfo)
 	if err != nil {
 		panic(err)
 	}
 	defer us.Close()
-	// user := models.User{
+	// newUser := models.User{
 	// 	Name:  "Michael Scott",
-	// 	Email: "michael@dundermifflin.com",
+	// 	Email: "michael@papermifflin.com",
 	// }
-	// if err := us.Create(&user); err != nil {
+	// if err = us.Create(&newUser); err != nil {
 	// 	panic(err)
 	// }
-	user, err := us.ByID(1)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(user)
+	// user, err := us.ByEmail("michael@papermifflin.com")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(user)
+	// if err := us.Delete(1); err != nil {
+	// 	panic(err)
+	// }
+	// user.Email = "michael@anotherpaperco.com"
+	// if err := us.Update(user); err != nil {
+	// 	panic(err)
+	// }
+
 	// us.DestructiveReset()
 }
