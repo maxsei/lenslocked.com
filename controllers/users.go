@@ -84,10 +84,27 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	case models.ErrInvalidPassword:
 		fmt.Fprintln(w, "Invalid password provided.")
 	case nil:
-		fmt.Fprintln(w, user)
+		break
 	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	// fmt.Fprintln(w, form)
-	// user, err := u.us.ByEmail()
+	if err != nil {
+		return
+	}
+	cookie := http.Cookie{
+		Name:  "email",
+		Value: user.Email,
+	}
+	http.SetCookie(w, &cookie)
+	fmt.Fprintln(w, user)
+}
+
+// CookieTest prints out the cookie you have in /cookietest
+func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("email")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Cookie: %#v\n", cookie)
 }
