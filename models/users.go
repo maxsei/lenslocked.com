@@ -7,6 +7,8 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" //initializes postgres drivers
 	"golang.org/x/crypto/bcrypt"
+	"lenslocked.com/hash"
+	"lenslocked.com/rand"
 )
 
 var (
@@ -24,11 +26,7 @@ var (
 )
 
 const userPwPepper = "nubis"
-
-//UserService details things that can be done with users
-type UserService struct {
-	db *gorm.DB
-}
+const hmacSecretKey = "secret-hmac-key"
 
 // NewUserService creates a new connections to the database
 func NewUserService(connectionInfo string) (*UserService, error) {
@@ -36,11 +34,18 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 	if err != nil {
 		return nil, err
 	}
-	// db.AutoMigrate(&User{})  do this if something goes wrong in testing
 	db.LogMode(true)
+	hmac := hash.NewHMAC(hmacSecretKey)
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: hmac,
 	}, nil
+}
+
+//UserService details things that can be done with users
+type UserService struct {
+	db   *gorm.DB
+	hmac hash.HMAC
 }
 
 // ByID finds a user by a given ID.
@@ -49,8 +54,10 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 func (us *UserService) ByID(id uint) (*User, error) {
 	var user User
 	db := us.db.Where("id = ?", id)
-	err := first(db, &user)
-	return &user, err
+	if err := first(db, &user); err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // ByEmail finds a user by a given email.
@@ -59,8 +66,23 @@ func (us *UserService) ByID(id uint) (*User, error) {
 func (us *UserService) ByEmail(email string) (*User, error) {
 	var user User
 	db := us.db.Where("email = ?", email)
-	err := first(db, &user)
-	return &user, err
+	if err := first(db, &user); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// ByRemember will find the given user with the given remember
+// token.  This method will handle the hashing  the token for us
+// Errors returned will be an internal server error
+func (us *UserService) ByRemember(token string) (*User, error) {
+	var user User
+	rememberHash := us.hmac.Hash(token)
+	db := us.db.Where("remember_hash = ?", rememberHash)
+	if err := first(db, &user); err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // Authenticate can be used to authenticate a user with a provided username
@@ -104,6 +126,16 @@ func (us *UserService) Create(user *User) error {
 	}
 	user.PasswordHash = string(hashBytes)
 	user.Password = ""
+
+	if user.Remember == "" {
+		token, err := rand.RememberToken()
+		if err != nil {
+			return err
+		}
+		user.Remember = token
+	}
+	user.RememberHash = us.hmac.Hash(user.Remember)
+
 	if err := us.db.Create(user).Error; err != nil {
 		return fmt.Errorf(ErrExistingEmail.Error(), user.Email)
 	}
@@ -113,6 +145,9 @@ func (us *UserService) Create(user *User) error {
 // Update will update the provided user with all of
 // the data inside the provided used obect
 func (us *UserService) Update(user *User) error {
+	if user.Remember != "" {
+		user.RememberHash = us.hmac.Hash(user.Remember)
+	}
 	return us.db.Save(user).Error
 }
 
@@ -151,4 +186,6 @@ type User struct {
 	Email        string `gorm:"not null;not null;unique_index"`
 	Password     string `gorm:"-"`
 	PasswordHash string `gom:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null;unique_index"`
 }
