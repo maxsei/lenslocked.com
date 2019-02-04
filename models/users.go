@@ -128,8 +128,13 @@ type userValidator struct {
 // ByRemember will hash the remember token if necessary
 // and then call ByRemember on the subsequent  UserDB layer
 func (uv *userValidator) ByRemember(token string) (*User, error) {
-	rememberHash := uv.hmac.Hash(token)
-	return uv.UserDB.ByRemember(rememberHash)
+	user := &User{
+		Remember: token,
+	}
+	if err := runUserValFuncs(user, uv.hmacRemember); err != nil {
+		return nil, err
+	}
+	return uv.UserDB.ByRemember(user.RememberHash)
 }
 
 // Create will provide a user with a hashed password, discarding
@@ -137,9 +142,6 @@ func (uv *userValidator) ByRemember(token string) (*User, error) {
 // remember token and create the user by calling create on the
 // subsequent UserDB layer
 func (uv *userValidator) Create(user *User) error {
-	if err := runUserValFuncs(user, uv.bcryptUserPassword); err != nil {
-		return err
-	}
 	if user.Remember == "" {
 		token, err := rand.RememberToken()
 		if err != nil {
@@ -147,15 +149,21 @@ func (uv *userValidator) Create(user *User) error {
 		}
 		user.Remember = token
 	}
-	user.RememberHash = uv.hmac.Hash(user.Remember)
+	if err := runUserValFuncs(user,
+		uv.bcryptPassword,
+		uv.hmacRemember); err != nil {
+		return err
+	}
 	return uv.UserDB.Create(user)
 }
 
 // Update will hash the remember token if provided and update
 // the user in the subsequent UserDB layer by calling Update
 func (uv *userValidator) Update(user *User) error {
-	if user.Remember != "" {
-		user.RememberHash = uv.hmac.Hash(user.Remember)
+	if err := runUserValFuncs(user,
+		uv.bcryptPassword,
+		uv.hmacRemember); err != nil {
+		return err
 	}
 	return uv.UserDB.Update(user)
 }
@@ -173,7 +181,7 @@ func (uv *userValidator) Delete(id uint) error {
 // bcryptUserPassword takes in a user and bcrypts their password, along
 // with some pepper, returning nil for no password to bcrypt and err if
 // there was a problem bycripting their password
-func (uv *userValidator) bcryptUserPassword(user *User) error {
+func (uv *userValidator) bcryptPassword(user *User) error {
 	if user.Password == "" {
 		return nil
 	}
@@ -186,6 +194,15 @@ func (uv *userValidator) bcryptUserPassword(user *User) error {
 	user.Password = ""
 	return nil
 }
+
+func (uv *userValidator) hmacRemember(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+	user.RememberHash = uv.hmac.Hash(user.Remember)
+	return nil
+}
+
 func newUserGorm(connectionInfo string) (*userGorm, error) {
 	db, err := gorm.Open("postgres", connectionInfo)
 	if err != nil {
