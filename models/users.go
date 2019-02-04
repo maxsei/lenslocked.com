@@ -10,6 +10,9 @@ import (
 	"lenslocked.com/rand"
 )
 
+const userPwPepper = "nubis"
+const hmacSecretKey = "secret-hmac-key"
+
 var (
 	// ErrNotFound is when we cannot find a thing in our database
 	ErrNotFound = errors.New("models: resource not found")
@@ -19,8 +22,61 @@ var (
 	ErrInvalidPassword = errors.New("models: incorrect password provided")
 )
 
-const userPwPepper = "nubis"
-const hmacSecretKey = "secret-hmac-key"
+// User is a type that represents user model stored in our database
+// and is used for user accounts, storying email and password info
+type User struct {
+	gorm.Model
+	Name         string
+	Email        string `gorm:"not null;not null;unique_index"`
+	Password     string `gorm:"-"`
+	PasswordHash string `gom:"not null"`
+	Remember     string `gorm:"-"`
+	RememberHash string `gorm:"not null;unique_index"`
+}
+
+// NewUserService creates a new connections to the database
+func NewUserService(connectionInfo string) (UserService, error) {
+	ug, err := newUserGorm(connectionInfo)
+	if err != nil {
+		return nil, err
+	}
+	return &userService{
+		UserDB: &userValidator{
+			ug,
+		},
+	}, nil
+}
+
+// UserService is a set of methods used to manipulate and
+// work with the user model
+type UserService interface {
+	// Authenticate will verify the provided email address
+	// and password are correct. If they are correct, the users
+	// correspoding to the email will be returned. Else you will
+	// receive ErrNotFound, ErrInvalidID, or other errors
+	Authenticate(email, password string) (*User, error)
+	UserDB // all methods from UserDB interface
+}
+
+// Authenticate can be used to authenticate a user with a provided username
+// and password
+func (us *userService) Authenticate(email, password string) (*User, error) {
+	foundUser, err := us.ByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	foundPasswordBytes := []byte(foundUser.PasswordHash)
+	enteredPasswordBytes := []byte(password + userPwPepper)
+	err = bcrypt.CompareHashAndPassword(foundPasswordBytes, enteredPasswordBytes)
+	switch err {
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return nil, ErrInvalidPassword
+	case nil:
+		return foundUser, nil
+	default:
+		return nil, err
+	}
+}
 
 // UserDB is used to interact with the users database.
 // For pretty much all single user queries:
@@ -42,23 +98,13 @@ type UserDB interface {
 	DestructiveReset() error
 }
 
-// NewUserService creates a new connections to the database
-func NewUserService(connectionInfo string) (*UserService, error) {
-	ug, err := newUserGorm(connectionInfo)
-	if err != nil {
-		return nil, err
-	}
-	return &UserService{
-		UserDB: &userValidator{
-			ug,
-		},
-	}, nil
-}
+var _ UserService = &userService{}
 
-// UserService is a wrapper around the userGorm type
-type UserService struct {
+type userService struct {
 	UserDB
 }
+
+var _ UserDB = &userValidator{}
 
 type userValidator struct {
 	UserDB
@@ -76,6 +122,8 @@ func newUserGorm(connectionInfo string) (*userGorm, error) {
 		hmac: hmac,
 	}, nil
 }
+
+var _ UserDB = &userGorm{}
 
 // userGorm details things that can be done with databasing users
 type userGorm struct {
@@ -116,26 +164,6 @@ func (ug *userGorm) ByRemember(token string) (*User, error) {
 		return nil, err
 	}
 	return &user, nil
-}
-
-// Authenticate can be used to authenticate a user with a provided username
-// and password
-func (us *UserService) Authenticate(email, password string) (*User, error) {
-	foundUser, err := us.ByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-	foundPasswordBytes := []byte(foundUser.PasswordHash)
-	enteredPasswordBytes := []byte(password + userPwPepper)
-	err = bcrypt.CompareHashAndPassword(foundPasswordBytes, enteredPasswordBytes)
-	switch err {
-	case bcrypt.ErrMismatchedHashAndPassword:
-		return nil, ErrInvalidPassword
-	case nil:
-		return foundUser, nil
-	default:
-		return nil, err
-	}
 }
 
 // first will query using the provided gorm.DB and
@@ -206,15 +234,4 @@ func (ug *userGorm) DestructiveReset() error {
 // AutoMigrate will appempt to automatically migrate users table
 func (ug *userGorm) AutoMigrate() error {
 	return ug.db.AutoMigrate(&User{}).Error
-}
-
-// User is a type that describes users on the site
-type User struct {
-	gorm.Model
-	Name         string
-	Email        string `gorm:"not null;not null;unique_index"`
-	Password     string `gorm:"-"`
-	PasswordHash string `gom:"not null"`
-	Remember     string `gorm:"-"`
-	RememberHash string `gorm:"not null;unique_index"`
 }
