@@ -107,17 +107,6 @@ type userService struct {
 	UserDB
 }
 
-type userValFunc func(*User) error
-
-func runUserValFuncs(user *User, fns ...userValFunc) error {
-	for _, fn := range fns {
-		if err := fn(user); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 var _ UserDB = &userValidator{}
 
 type userValidator struct {
@@ -142,15 +131,9 @@ func (uv *userValidator) ByRemember(token string) (*User, error) {
 // remember token and create the user by calling create on the
 // subsequent UserDB layer
 func (uv *userValidator) Create(user *User) error {
-	if user.Remember == "" {
-		token, err := rand.RememberToken()
-		if err != nil {
-			return err
-		}
-		user.Remember = token
-	}
 	if err := runUserValFuncs(user,
 		uv.bcryptPassword,
+		uv.instantiateRemember,
 		uv.hmacRemember); err != nil {
 		return err
 	}
@@ -178,6 +161,20 @@ func (uv *userValidator) Delete(id uint) error {
 	return uv.UserDB.Delete(id)
 }
 
+// userValFunc are methods of type userValidator
+type userValFunc func(*User) error
+
+// runUserValFuncs runs all the sequential validations methods on the
+// given user returning an error if there is any.
+func runUserValFuncs(user *User, fns ...userValFunc) error {
+	for _, fn := range fns {
+		if err := fn(user); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // bcryptUserPassword takes in a user and bcrypts their password, along
 // with some pepper, returning nil for no password to bcrypt and err if
 // there was a problem bycripting their password
@@ -195,6 +192,7 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 	return nil
 }
 
+// hmacRemember hashes the remember token for a given user
 func (uv *userValidator) hmacRemember(user *User) error {
 	if user.Remember == "" {
 		return nil
@@ -203,6 +201,20 @@ func (uv *userValidator) hmacRemember(user *User) error {
 	return nil
 }
 
+// instantiateRemember creates a new random remember token for a given user
+func (uv *userValidator) instantiateRemember(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+	token, err := rand.RememberToken()
+	if err != nil {
+		return err
+	}
+	user.Remember = token
+	return nil
+}
+
+// newUserGorm creates a new connnection to a Gorm db
 func newUserGorm(connectionInfo string) (*userGorm, error) {
 	db, err := gorm.Open("postgres", connectionInfo)
 	if err != nil {
