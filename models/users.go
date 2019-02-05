@@ -29,6 +29,10 @@ var (
 	ErrPasswordTooShort = errors.New("models: password must be at least eight characters")
 	// ErrPasswordRequired describes when a password is not provided
 	ErrPasswordRequired = errors.New("models: password is required")
+	// ErrRememberTooShort describes when a remember token is not at least 32 bytes
+	ErrRememberTooShort = errors.New("models: remember token must be 32 bytes")
+	// ErrRememberRequired describes when a remember token is not provided
+	ErrRememberRequired = errors.New("models: remember token is required")
 )
 
 const userPwPepper = "nubis"
@@ -166,11 +170,13 @@ func (uv *userValidator) ByRemember(token string) (*User, error) {
 func (uv *userValidator) Create(user *User) error {
 	if err := runUserValFuncs(user,
 		uv.passwordRequired,
-		uv.passwordLength,
+		uv.passwordMinLength,
 		uv.bcryptPassword,
 		uv.passwordHashRequired,
 		uv.instantiateRemember,
+		uv.rememberMinBytes,
 		uv.hmacRemember,
+		uv.rememberHashRequired,
 		uv.normalizeEmail,
 		uv.requireEmail,
 		uv.emailFormat,
@@ -184,10 +190,12 @@ func (uv *userValidator) Create(user *User) error {
 // the user in the subsequent UserDB layer by calling Update
 func (uv *userValidator) Update(user *User) error {
 	if err := runUserValFuncs(user,
-		uv.passwordLength,
+		uv.passwordMinLength,
 		uv.bcryptPassword,
 		uv.passwordHashRequired,
+		uv.rememberMinBytes,
 		uv.hmacRemember,
+		uv.rememberHashRequired,
 		uv.requireEmail,
 		uv.normalizeEmail,
 		uv.emailFormat); err != nil {
@@ -261,6 +269,30 @@ func (uv *userValidator) instantiateRemember(user *User) error {
 	return nil
 }
 
+// rememberMinBytes returns error if remember token is not base 64 URL
+// encoded or less than 32 characters in length.  nil is return if none is provided
+func (uv *userValidator) rememberMinBytes(user *User) error {
+	if user.Remember == "" {
+		return nil
+	}
+	n, err := rand.NBytes(user.Remember)
+	if err != nil {
+		return err
+	}
+	if n < 32 {
+		return ErrRememberTooShort
+	}
+	return nil
+}
+
+// rememberHashRequired returns ErrRememberRequired if no hash provided
+func (uv *userValidator) rememberHashRequired(user *User) error {
+	if user.RememberHash == "" {
+		return ErrRememberRequired
+	}
+	return nil
+}
+
 // positiveID returns ErrIDInvalid if ID is non postive
 func (uv *userValidator) positiveID(user *User) error {
 	if user.ID <= 0 {
@@ -308,9 +340,9 @@ func (uv *userValidator) emailIsAvail(user *User) error {
 	return nil
 }
 
-// passwordLength return nil for no password and ErrPasswordTooShort
+// passwordMinLength return nil for no password and ErrPasswordTooShort
 // if password is less than eight characters long
-func (uv *userValidator) passwordLength(user *User) error {
+func (uv *userValidator) passwordMinLength(user *User) error {
 	if user.Password == "" {
 		return nil
 	}
