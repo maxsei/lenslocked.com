@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" //initializes postgres drivers
@@ -114,6 +115,18 @@ type userValidator struct {
 	hmac hash.HMAC
 }
 
+// ByEmail will normalize the email and then call ByEmail
+// on the subsequent UserDB layer
+func (uv *userValidator) ByEmail(email string) (*User, error) {
+	user := User{
+		Email: email,
+	}
+	if err := runUserValFuncs(&user, uv.normalizeEmail); err != nil {
+		return nil, err
+	}
+	return uv.UserDB.ByEmail(user.Email)
+}
+
 // ByRemember will hash the remember token if necessary
 // and then call ByRemember on the subsequent  UserDB layer
 func (uv *userValidator) ByRemember(token string) (*User, error) {
@@ -134,7 +147,8 @@ func (uv *userValidator) Create(user *User) error {
 	if err := runUserValFuncs(user,
 		uv.bcryptPassword,
 		uv.instantiateRemember,
-		uv.hmacRemember); err != nil {
+		uv.hmacRemember,
+		uv.normalizeEmail); err != nil {
 		return err
 	}
 	return uv.UserDB.Create(user)
@@ -145,7 +159,8 @@ func (uv *userValidator) Create(user *User) error {
 func (uv *userValidator) Update(user *User) error {
 	if err := runUserValFuncs(user,
 		uv.bcryptPassword,
-		uv.hmacRemember); err != nil {
+		uv.hmacRemember,
+		uv.normalizeEmail); err != nil {
 		return err
 	}
 	return uv.UserDB.Update(user)
@@ -215,10 +230,18 @@ func (uv *userValidator) instantiateRemember(user *User) error {
 	user.Remember = token
 	return nil
 }
+
+// positiveID returns ErrInvalidID if ID is non postive
 func (uv *userValidator) positiveID(user *User) error {
 	if user.ID <= 0 {
 		return ErrInvalidID
 	}
+	return nil
+}
+
+func (uv *userValidator) normalizeEmail(user *User) error {
+	user.Email = strings.ToLower(user.Email)
+	user.Email = strings.TrimSpace(user.Email)
 	return nil
 }
 
