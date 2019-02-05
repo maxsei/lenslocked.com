@@ -11,8 +11,10 @@
         {{template "navbar"}}
         <div class="container-fluid">
             <!-- our content -->
-            {{template "alert"}}
-            {{template "yeild" . }}
+            {{if .Alert}}
+            {{template "alert" .Alert}}
+            {{end}}
+            {{template "yeild" .Yeild}}
             {{template "footer"}}
         </div>
 

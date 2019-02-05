@@ -258,7 +258,7 @@ func (uv *userValidator) hmacRemember(user *User) error {
 
 // instantiateRemember creates a new random remember token for a given user
 func (uv *userValidator) instantiateRemember(user *User) error {
-	if user.Remember == "" {
+	if user.Remember != "" {
 		return nil
 	}
 	token, err := rand.RememberToken()

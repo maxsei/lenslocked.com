@@ -44,9 +44,18 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Render is used to render a View to the http.ResponseWriter with
 // the View Layout and the data provided to fill in template mustaches
+// if no data is not of type views.Data then create a new one with yeild data
+// as the data passedinto the Render method
 func (v View) Render(w http.ResponseWriter, data interface{}) error {
 	w.Header().Set("Content-Type", "text/html")
-	return v.Template.ExecuteTemplate(w, v.Layout, nil)
+	switch data.(type) {
+	case Data:
+	default:
+		data = Data{
+			Yeild: data,
+		}
+	}
+	return v.Template.ExecuteTemplate(w, v.Layout, data)
 }
 
 // formatViewPath adds the views path to the passed in
