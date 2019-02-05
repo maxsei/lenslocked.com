@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"regexp"
 	"strings"
 
@@ -10,29 +9,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"lenslocked.com/hash"
 	"lenslocked.com/rand"
-)
-
-var (
-	// ErrNotFound is when we cannot find a thing in our database
-	ErrNotFound = errors.New("models: resource not found")
-	// ErrIDInvalid describes when the user enters an invalid ID
-	ErrIDInvalid = errors.New("models: ID provided was invalid")
-	// ErrPasswordIncorrect describes	 when the user logs in with an incorrect passwrod
-	ErrPasswordIncorrect = errors.New("models: incorrect password provided")
-	// ErrEmailRequired describes when an email is not provided
-	ErrEmailRequired = errors.New("models: email address is required")
-	// ErrEmailInvalid describes when an email does not match a valid email
-	ErrEmailInvalid = errors.New("models: email address is not valid ")
-	// ErrEmailTaken describes an attempt to create an email that already exists
-	ErrEmailTaken = errors.New("models: email address is already taken")
-	// ErrPasswordTooShort describes when update or create is attempted with a short password
-	ErrPasswordTooShort = errors.New("models: password must be at least eight characters")
-	// ErrPasswordRequired describes when a password is not provided
-	ErrPasswordRequired = errors.New("models: password is required")
-	// ErrRememberTooShort describes when a remember token is not at least 32 bytes
-	ErrRememberTooShort = errors.New("models: remember token must be 32 bytes")
-	// ErrRememberRequired describes when a remember token is not provided
-	ErrRememberRequired = errors.New("models: remember token is required")
 )
 
 const userPwPepper = "nubis"
