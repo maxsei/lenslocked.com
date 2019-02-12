@@ -373,17 +373,6 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 	return &user, err
 }
 
-// first will query using the provided gorm.DB and
-// will get the first item returned and place it into
-// dst.  It will return error not found if nothing is found
-func first(db *gorm.DB, dst interface{}) error {
-	err := db.First(dst).Error
-	if err == gorm.ErrRecordNotFound {
-		return ErrNotFound
-	}
-	return err
-}
-
 // Create insert a given user in the Gorm db.
 // Errors returned should be handled with a 500 StatusInternalServerError
 func (ug *userGorm) Create(user *User) error {
