@@ -32,6 +32,8 @@ func main() {
 	usersC := controllers.NewUsers(services.User)
 	galleryC := controllers.NewGalleries(services.Gallery)
 
+	requireUserMw := middleware.RequireUser{UserService: services.User}
+
 	r := mux.NewRouter()
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
@@ -41,7 +43,6 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 	//Gallery routes
-	requireUserMw := middleware.RequireUser{UserService: services.User}
 	r.Handle("/galleries/new", requireUserMw.Apply(galleryC.New)).Methods("GET")
 	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleryC.Create)).Methods("POST")
 

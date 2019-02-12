@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"lenslocked.com/context"
 	"lenslocked.com/models"
 )
 
@@ -16,7 +17,6 @@ func (mw *RequireUser) Apply(next http.Handler) http.HandlerFunc {
 }
 func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// if the user is logged in...
 		cookie, err := r.Cookie("remember_token")
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusFound)
@@ -27,6 +27,9 @@ func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
+		ctx := r.Context()
+		ctx = context.WithUser(ctx, user)
+		r = r.WithContext(ctx)
 		fmt.Printf("User found: %#v\n", user)
 		next(w, r)
 	})
