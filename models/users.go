@@ -27,16 +27,13 @@ type User struct {
 }
 
 // NewUserService creates a new connections to the database
-func NewUserService(connectionInfo string) (UserService, error) {
-	ug, err := newUserGorm(connectionInfo)
-	if err != nil {
-		return nil, err
-	}
+func NewUserService(db *gorm.DB) UserService {
+	ug := &userGorm{db}
 	hmac := hash.NewHMAC(hmacSecretKey)
 	uv := newUserValidator(ug, hmac)
 	return &userService{
 		UserDB: uv,
-	}, nil
+	}
 }
 
 // UserService is a set of methods used to manipulate and
@@ -342,18 +339,6 @@ func (uv *userValidator) passwordHashRequired(user *User) error {
 		return ErrPasswordRequired
 	}
 	return nil
-}
-
-// newUserGorm creates a new connnection to a Gorm db
-func newUserGorm(connectionInfo string) (*userGorm, error) {
-	db, err := gorm.Open("postgres", connectionInfo)
-	if err != nil {
-		return nil, err
-	}
-	db.LogMode(true)
-	return &userGorm{
-		db: db,
-	}, nil
 }
 
 var _ UserDB = &userGorm{}
