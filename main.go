@@ -42,9 +42,8 @@ func main() {
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 	//Gallery routes
 	requireUserMw := middleware.RequireUser{UserService: services.User}
-	galleryNew := requireUserMw.Apply(galleryC.New)
-	r.Handle("/galleries/new", galleryNew).Methods("GET")
-	r.HandleFunc("/galleries", galleryC.Create).Methods("POST")
+	r.Handle("/galleries/new", requireUserMw.Apply(galleryC.New)).Methods("GET")
+	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleryC.Create)).Methods("POST")
 
 	http.ListenAndServe(":8080", r)
 }
