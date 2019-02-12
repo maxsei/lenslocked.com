@@ -8,7 +8,7 @@ const (
 	// AlertMsgGeneric is a message we will generally give to users
 	// when something goes wrong internally
 	AlertMsgGeneric = "Something went Wrong. Please try again later" +
-		"and contact us if the problem persists"
+		" and contact us if the problem persists"
 )
 
 // Alert will be the data passed to the alert template

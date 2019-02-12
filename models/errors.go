@@ -5,8 +5,6 @@ import "strings"
 const (
 	// ErrNotFound is when we cannot find a thing in our database
 	ErrNotFound modelError = "models: resource not found"
-	// ErrIDInvalid describes when the user enters an invalid ID
-	ErrIDInvalid modelError = "models: ID provided was invalid"
 	// ErrPasswordIncorrect describes	 when the user logs in with an incorrect passwrod
 	ErrPasswordIncorrect modelError = "models: incorrect password provided"
 	// ErrEmailRequired describes when an email is not provided
@@ -19,10 +17,16 @@ const (
 	ErrPasswordTooShort modelError = "models: password must be at least eight characters"
 	// ErrPasswordRequired describes when a password is not provided
 	ErrPasswordRequired modelError = "models: password is required"
+	// ErrTitleRequired describes when a gallery title is not provided on the galleries page
+	ErrTitleRequired modelError = "models: gallery title is required"
 	// ErrRememberTooShort describes when a remember token is not at least 32 bytes
-	ErrRememberTooShort modelError = "models: remember token must be 32 bytes"
+	ErrRememberTooShort privateError = "models: remember token must be 32 bytes"
 	// ErrRememberRequired describes when a remember token is not provided
-	ErrRememberRequired modelError = "models: remember token is required"
+	ErrRememberRequired privateError = "models: remember token is required"
+	// ErrIDInvalid describes when the user enters an invalid ID
+	ErrIDInvalid privateError = "models: ID provided was invalid"
+	// ErrUserIDRequired describes when a user ID is not provided on the galleries page
+	ErrUserIDRequired privateError = "models: user ID is required"
 )
 
 type modelError string
@@ -34,4 +38,10 @@ func (e modelError) Error() string {
 func (e modelError) Public() string {
 	s := strings.Replace(string(e), "models: ", "", 1)
 	return strings.Title(s)
+}
+
+type privateError string
+
+func (e privateError) Error() string {
+	return string(e)
 }
