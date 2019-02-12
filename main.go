@@ -25,6 +25,7 @@ func main() {
 	must(err)
 	defer services.Close()
 	services.AutoMigrate()
+	// services.DestructiveReset()
 
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
