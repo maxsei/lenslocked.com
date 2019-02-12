@@ -23,9 +23,8 @@ func main() {
 	)
 	services, err := models.NewServices(psqlInfo)
 	must(err)
-	//// TODO: fix this move close to top level at services
-	// defer us.Close()
-	// us.AutoMigrate()
+	defer services.Close()
+	services.AutoMigrate()
 
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
