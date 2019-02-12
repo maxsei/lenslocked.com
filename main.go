@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"lenslocked.com/controllers"
+	"lenslocked.com/middleware"
 	"lenslocked.com/models"
 )
 
@@ -40,7 +41,9 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 	//Gallery routes
-	r.Handle("/galleries/new", galleryC.New).Methods("GET")
+	requireUserMw := middleware.RequireUser{UserService: services.User}
+	galleryNew := requireUserMw.Apply(galleryC.New)
+	r.Handle("/galleries/new", galleryNew).Methods("GET")
 	r.HandleFunc("/galleries", galleryC.Create).Methods("POST")
 
 	http.ListenAndServe(":8080", r)
@@ -50,7 +53,4 @@ func must(err error) {
 	if err != nil {
 		panic(err)
 	}
-}
-func foo() {
-
 }
