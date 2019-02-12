@@ -14,7 +14,7 @@ func NewHMAC(key string) HMAC {
 	}
 }
 
-// HMAC is a wrapper around the crypto/hmax package
+// HMAC is a wrapper around the crypto/hmac package
 // making it a little easier to use
 type HMAC struct {
 	hmac hash.Hash
