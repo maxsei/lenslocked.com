@@ -23,8 +23,8 @@ type Data struct {
 	Yeild interface{}
 }
 
-// SetAlert will set the alert type to be generic if it is not an approved Public Error
-func (d *Data) SetAlert(err error) {
+// ErrorAlert will set the alert type to be generic if it is not an approved Public Error
+func (d *Data) ErrorAlert(err error) {
 	if pErr, ok := err.(PublicError); ok {
 		d.Alert = &Alert{
 			Level:   AlertLvlError,
@@ -35,6 +35,14 @@ func (d *Data) SetAlert(err error) {
 	d.Alert = &Alert{
 		Level:   AlertLvlError,
 		Message: AlertMsgGeneric,
+	}
+}
+
+// SuccessAlert will show an message to show that some action was done successfully
+func (d *Data) SuccessAlert(msg string) {
+	d.Alert = &Alert{
+		Level:   AlertLvlSuccess,
+		Message: msg,
 	}
 }
 

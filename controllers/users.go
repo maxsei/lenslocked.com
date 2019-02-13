@@ -50,7 +50,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	var form SignupForm
 	if err := parseForm(r, &form); err != nil {
 		log.Println(err)
-		vd.SetAlert(err)
+		vd.ErrorAlert(err)
 		u.NewView.Render(w, vd)
 		return
 	}
@@ -60,7 +60,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		Password: form.Password,
 	}
 	if err := u.us.Create(&user); err != nil {
-		vd.SetAlert(err)
+		vd.ErrorAlert(err)
 		u.NewView.Render(w, vd)
 		return
 	}

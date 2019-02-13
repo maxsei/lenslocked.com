@@ -31,7 +31,7 @@ func main() {
 	r := mux.NewRouter()
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
-	galleryC := controllers.NewGalleries(services.Gallery, r)
+	galleriesC := controllers.NewGalleries(services.Gallery, r)
 
 	requireUserMw := middleware.RequireUser{UserService: services.User}
 
@@ -43,10 +43,12 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 	//Gallery routes
-	r.Handle("/galleries/new", requireUserMw.Apply(galleryC.New)).Methods("GET")
-	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleryC.Create)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleryC.Edit)).Methods("GET")
-	r.HandleFunc("/galleries/{id:[0-9]+}", galleryC.Show).
+	r.Handle("/galleries/new", requireUserMw.Apply(galleriesC.New)).Methods("GET")
+	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Create)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesC.Edit)).Methods("GET")
+	r.HandleFunc("/galleries/{id:[0-9]+}/update", requireUserMw.ApplyFn(galleriesC.Update)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesC.Delete)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).
 		Methods("GET").Name(controllers.GalleryRouteName)
 
 	http.ListenAndServe(":8080", r)
