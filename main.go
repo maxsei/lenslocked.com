@@ -34,7 +34,7 @@ func main() {
 	galleriesC := controllers.NewGalleries(services.Gallery, r)
 
 	userMw := middleware.User{UserService: services.User}
-	requireUserMw := middleware.RequireUser{User: userMw}
+	OwnerMw := middleware.Owner{User: userMw}
 
 	// Standard Routes
 	r.Handle("/", staticC.Home).Methods("GET")
@@ -45,14 +45,14 @@ func main() {
 	r.Handle("/login", usersC.LoginView).Methods("GET")
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	//Gallery Routes
-	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Index)).Methods("GET")
-	r.Handle("/galleries/new", requireUserMw.Apply(galleriesC.New)).Methods("GET")
-	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Create)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/update", requireUserMw.ApplyFn(galleriesC.Update)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesC.Delete)).Methods("POST")
+	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Index)).Methods("GET")
+	r.Handle("/galleries/new", OwnerMw.Apply(galleriesC.New)).Methods("GET")
+	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Create)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/update", OwnerMw.ApplyFn(galleriesC.Update)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/delete", OwnerMw.ApplyFn(galleriesC.Delete)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).
 		Methods("GET").Name(controllers.NamedGalleryShowRoute)
-	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesC.Edit)).
+	r.HandleFunc("/galleries/{id:[0-9]+}/edit", OwnerMw.ApplyFn(galleriesC.Edit)).
 		Methods("GET").Name(controllers.NamedGalleryEditRoute)
 
 	http.ListenAndServe(":8080", userMw.Apply(r))

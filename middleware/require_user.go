@@ -33,21 +33,21 @@ func (mw *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-// RequireUser assumes that User middleware has already
+// Owner assumes that User middleware has already
 // been run otherwise it will not work correctly
-type RequireUser struct {
+type Owner struct {
 	User
 }
 
 // Apply assumes that User middleware has already
 // been run otherwise it will not work correctly
-func (mw *RequireUser) Apply(next http.Handler) http.HandlerFunc {
+func (mw *Owner) Apply(next http.Handler) http.HandlerFunc {
 	return mw.ApplyFn(next.ServeHTTP)
 }
 
 // ApplyFn assumes that User middleware has already
 // been run otherwise it will not work correctly
-func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
+func (mw *Owner) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return mw.User.ApplyFn(func(w http.ResponseWriter, r *http.Request) {
 		user := context.User(r.Context())
 		if user == nil {
