@@ -1,5 +1,7 @@
 package views
 
+import "lenslocked.com/models"
+
 const (
 	AlertLvlError   = "danger"
 	AlertLvlWarning = "warning"
@@ -20,6 +22,7 @@ type Alert struct {
 // Data is the top level structure that will be passed to our html templates
 type Data struct {
 	Alert *Alert
+	User  *models.User
 	Yeild interface{}
 }
 

@@ -33,16 +33,18 @@ func main() {
 	usersC := controllers.NewUsers(services.User)
 	galleriesC := controllers.NewGalleries(services.Gallery, r)
 
-	requireUserMw := middleware.RequireUser{UserService: services.User}
+	userMw := middleware.User{UserService: services.User}
+	requireUserMw := middleware.RequireUser{User: userMw}
 
+	// Standard Routes
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
+	//User Routes
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.Handle("/login", usersC.LoginView).Methods("GET")
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
-	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
-	//Gallery routes
+	//Gallery Routes
 	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Index)).Methods("GET")
 	r.Handle("/galleries/new", requireUserMw.Apply(galleriesC.New)).Methods("GET")
 	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesC.Create)).Methods("POST")
@@ -53,7 +55,7 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesC.Edit)).
 		Methods("GET").Name(controllers.NamedGalleryEditRoute)
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8080", userMw.Apply(r))
 }
 
 func must(err error) {

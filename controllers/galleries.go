@@ -51,7 +51,7 @@ func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
 	}
 	var vd views.Data
 	vd.Yeild = galleries
-	g.IndexView.Render(w, vd)
+	g.IndexView.Render(w, r, vd)
 }
 
 // GET /galleries/:id
@@ -62,7 +62,7 @@ func (g *Galleries) Show(w http.ResponseWriter, r *http.Request) {
 	}
 	var vd views.Data
 	vd.Yeild = gallery
-	g.ShowView.Render(w, vd)
+	g.ShowView.Render(w, r, vd)
 }
 
 // GET /galleries/:id/edit
@@ -78,7 +78,7 @@ func (g *Galleries) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 	var vd views.Data
 	vd.Yeild = gallery
-	g.EditView.Render(w, vd)
+	g.EditView.Render(w, r, vd)
 }
 
 // GET /galleries/:id/edit
@@ -98,17 +98,17 @@ func (g *Galleries) Update(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(r, &form); err != nil {
 		log.Println(err)
 		vd.ErrorAlert(err)
-		g.EditView.Render(w, vd)
+		g.EditView.Render(w, r, vd)
 		return
 	}
 	gallery.Title = form.Title
 	if err := g.gs.Update(gallery); err != nil {
 		vd.ErrorAlert(err)
-		g.EditView.Render(w, vd)
+		g.EditView.Render(w, r, vd)
 		return
 	}
 	vd.SuccessAlert("Gallery successfully updated!")
-	g.EditView.Render(w, vd)
+	g.EditView.Render(w, r, vd)
 }
 
 // POST /galleries
@@ -118,7 +118,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(r, &form); err != nil {
 		log.Println(err)
 		vd.ErrorAlert(err)
-		g.New.Render(w, vd)
+		g.New.Render(w, r, vd)
 		return
 	}
 	user := context.User(r.Context())
@@ -133,7 +133,7 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := g.gs.Create(&gallery); err != nil {
 		vd.ErrorAlert(err)
-		g.New.Render(w, vd)
+		g.New.Render(w, r, vd)
 		return
 	}
 	url, err := g.r.Get(NamedGalleryEditRoute).URL("id", fmt.Sprintf("%v", gallery.ID))
@@ -160,7 +160,7 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 	if err := g.gs.Delete(gallery.ID); err != nil {
 		vd.ErrorAlert(err)
 		vd.Yeild = gallery
-		g.EditView.Render(w, vd)
+		g.EditView.Render(w, r, vd)
 		return
 	}
 	http.Redirect(w, r, "/galleries", http.StatusFound)

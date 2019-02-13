@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+
+	"lenslocked.com/context"
 )
 
 const (
@@ -39,24 +41,28 @@ type View struct {
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	v.Render(w, nil)
+	v.Render(w, r, nil)
 }
 
 // Render is used to render a View to the http.ResponseWriter with
 // the View Layout and the data provided to fill in template mustaches
 // if no data is not of type views.Data then create a new one with yeild data
 // as the data passedinto the Render method
-func (v View) Render(w http.ResponseWriter, data interface{}) {
+func (v View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
-	switch data.(type) {
+	var vd Data
+	switch d := data.(type) {
 	case Data:
+		vd = d
 	default:
-		data = Data{
+		vd = Data{
 			Yeild: data,
 		}
 	}
+	vd.User = context.User(r.Context())
+	// fmt.Printf("User in Requst Context: %v\n", vd.User)
 	var buf bytes.Buffer
-	if err := v.Template.ExecuteTemplate(&buf, v.Layout, data); err != nil {
+	if err := v.Template.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
 		http.Error(w, "Oops something went wrong.", http.StatusInternalServerError)
 		return
 	}
