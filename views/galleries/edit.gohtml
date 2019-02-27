@@ -1,6 +1,6 @@
 {{define "yeild"}}
     {{template "editGalleryForm" .}}
-    {{template "galleryImages"}}
+    {{template "galleryImages" .}}
     {{template "imageUploadForm" .}}
     {{template "deleteGalleryForm" .}}
 {{end}}
@@ -46,7 +46,7 @@
     {{range .ImagesSplitN 6}}
         <div class="row">
             {{range .}}
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <a href="{{.}}">
                         <img src="{{.}}" class="thumbnail">
                     </a>

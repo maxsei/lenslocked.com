@@ -11,12 +11,13 @@ type Gallery struct {
 }
 
 func (g *Gallery) ImagesSplitN(n int) [][]string {
-	result := make([][]string, len(g.Images)/n)
-	for i := range result {
-		result[i] = make([]string, n)
-	}
-	for i, img := range g.Images {
-		result[i/n][i%n] = img
+	result := make([][]string, 0, 1+len(g.Images)/n)
+	for i := 0; i < cap(result); i++ {
+		r := make([]string, n)
+		for j := 0; i*n+j < len(g.Images) && j < n; j++ {
+			r[j] = g.Images[i*n+j]
+		}
+		result = append(result, r)
 	}
 	return result
 }
