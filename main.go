@@ -36,15 +36,22 @@ func main() {
 	userMw := middleware.User{UserService: services.User}
 	OwnerMw := middleware.Owner{User: userMw}
 
+	/*
+		Remember routes are prioritized on a first come first serve basis
+		That is the routes that are declared first are also handled first
+	*/
 	// Standard Routes
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
-	//User Routes
+	// User Routes
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.Handle("/login", usersC.LoginView).Methods("GET")
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
-	//Gallery Routes
+	// Image Routes
+	imageHandler := http.FileServer(http.Dir("./images/"))
+	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", imageHandler))
+	// Gallery Routes
 	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Index)).Methods("GET")
 	r.Handle("/galleries/new", OwnerMw.Apply(galleriesC.New)).Methods("GET")
 	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Create)).Methods("POST")

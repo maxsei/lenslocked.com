@@ -114,7 +114,7 @@ func (g *Galleries) Update(w http.ResponseWriter, r *http.Request) {
 	g.EditView.Render(w, r, vd)
 }
 
-// GET /galleries/:id/images
+// POST /galleries/:id/images
 func (g *Galleries) Upload(w http.ResponseWriter, r *http.Request) {
 	gallery, err := g.galleryByID(w, r)
 	if err != nil {
@@ -134,15 +134,6 @@ func (g *Galleries) Upload(w http.ResponseWriter, r *http.Request) {
 		g.EditView.Render(w, r, vd)
 		return
 	}
-	// // create directory to put our image in
-	// galleryPath := fmt.Sprintf("images/galleries/%v/", gallery.ID)
-	// err = os.MkdirAll(galleryPath, 0755)
-	// if err != nil {
-	// 	vd.ErrorAlert(err)
-	// 	g.EditView.Render(w, r, vd)
-	// 	return
-	// }
-
 	files := r.MultipartForm.File["images"]
 	for _, f := range files {
 		file, err := f.Open()
@@ -159,7 +150,11 @@ func (g *Galleries) Upload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// g.EditView.Render(w, r, vd)
-	// fmt.Fprintln(w, "Files successfully .Create(gallery.ID, file, f.Filename)d.")
+	images, err := g.is.ByGalleryID(gallery.ID)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Fprintf(w, "Files: %v\n", images)
 }
 
 // POST /galleries
@@ -194,7 +189,6 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, url.Path, http.StatusFound)
-	fmt.Fprint(w, gallery)
 }
 
 func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
@@ -236,5 +230,7 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 		http.Error(w, "Whoops! Something went wrong.", http.StatusInternalServerError)
 		return nil, err
 	}
+	images, _ := g.is.ByGalleryID(gallery.ID)
+	gallery.Images = images
 	return gallery, nil
 }

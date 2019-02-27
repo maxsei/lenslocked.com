@@ -5,8 +5,20 @@ import "github.com/jinzhu/gorm"
 // Gallery represents that image resources that visitors view
 type Gallery struct {
 	gorm.Model
-	UserID uint   `gorm:"not_null;index"`
-	Title  string `gorm:"not_null"`
+	UserID uint     `gorm:"not_null;index"`
+	Title  string   `gorm:"not_null"`
+	Images []string `gorm:"-"`
+}
+
+func (g *Gallery) ImagesSplitN(n int) [][]string {
+	result := make([][]string, len(g.Images)/n)
+	for i := range result {
+		result[i] = make([]string, n)
+	}
+	for i, img := range g.Images {
+		result[i/n][i%n] = img
+	}
+	return result
 }
 
 type GalleryService interface {

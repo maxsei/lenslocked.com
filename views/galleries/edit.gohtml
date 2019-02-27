@@ -1,9 +1,8 @@
 {{define "yeild"}}
     {{template "editGalleryForm" .}}
+    {{template "galleryImages"}}
     {{template "imageUploadForm" .}}
-    <div class="offset-sm-1">
-        {{template "deleteGalleryForm" .}}
-    </div>
+    {{template "deleteGalleryForm" .}}
 {{end}}
 {{define "editGalleryForm"}}
     <form action="/galleries/{{.ID}}/update" method="POST" class="form-inline">
@@ -17,23 +16,47 @@
 {{end}}
 
 {{define "deleteGalleryForm"}}
-    <form action="/galleries/{{.ID}}/delete" method="POST" style="padding-top:20px;" >
-      <button type="submit" class="btn btn-danger">Delete This Gallery!</button>
-    </form>
+    <div class="offset-sm-5">
+        <form action="/galleries/{{.ID}}/delete" method="POST" style="padding-top:20px;" >
+          <button type="submit" class="btn btn-danger">Delete This Gallery!</button>
+        </form>
+    </div>
 {{end}}
 
 {{define "imageUploadForm"}}
-    <div class="mt-2 col-sm-10 col-md-4 offset-sm-1">
-        <form action="/galleries/{{.ID}}/images" method="POST" enctype="multipart/form-data" >
-            <label for="title" class="lead pl-4 col-sm-10">Upload Images</label>
-            <div class="ml-2 custom-file col-sm-10">
+    <form action="/galleries/{{.ID}}/images" method="POST" enctype="multipart/form-data" >
+        <div class="form-group col-sm-12">
+            <label for="title" class="col-sm-1 form-control-label">Upload Images</label>
+            <div class="custom-file ml col-sm-10">
                 <input type="file" multiple="multiple"class="custom-file-input" id="images" name="images">
                 <label class="custom-file-label" for="images">Choose Image</label>
             </div>
-            <div class="ml-2 offset-sm-10">
+            <div class="ml-2">
                 <p class="my-2 help-block">Please only use jpg, jpeg, and png</p>
                 <button type="submit" class="btn btn-light">Upload</button>
             </div>
-        </form>
+        </div>
+    </form>
+{{end}}
+
+{{define "galleryImages"}}
+    <div class="row">
+        <label for="Images" class="ml-5 col-sm-2">Images</label>
     </div>
+    {{range .ImagesSplitN 6}}
+        <div class="row">
+            {{range .}}
+                <div class="col-md-4">
+                    <a href="{{.}}">
+                        <img src="{{.}}" class="thumbnail">
+                    </a>
+                </div>
+            {{end}}
+        </div>
+    {{end}}
+    <style >
+    img.thumbnail{
+        width: 100%;
+    }
+    </style>
 {{end}}

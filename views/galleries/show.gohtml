@@ -1,12 +1,28 @@
 {{define "yeild"}}
-<div class="row">
-    <div class="col-md-10">
-        <h1>
-            {{.Title}}
-        </h1>
-        <p>
-            Images coming soon...
-        </p>
+    <div class="row">
+        <div class="col-md-10">
+            <h1>
+                {{.Title}}
+            </h1>
+        </div>
     </div>
-</div>
+    {{range .ImagesSplitN 3}}
+        <div class="row">
+            {{range .}}
+                <div class="col-md-4">
+                    <a href="{{.}}">
+                        <img src="{{.}}" class="thumbnail">
+                    </a>
+                </div>
+            {{end}}
+        </div>
+    {{end}}
+    <!--
+    This style thing is shitty so don't do it in production
+-->
+<style >
+img.thumbnail{
+    width: 100%;
+}
+</style>
 {{end}}
