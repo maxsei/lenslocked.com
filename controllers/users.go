@@ -85,6 +85,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 	var form LoginForm
 	if err := parseForm(r, &form); err != nil {
+		log.Println(err)
 		vd.ErrorAlert(err)
 		u.LoginView.Render(w, r, vd)
 		return
