@@ -12,6 +12,7 @@ import (
 	"lenslocked.com/views"
 )
 
+
 const (
 	NamedGalleryShowRoute = "galleries_show"
 	NamedGalleryEditRoute = "galleries_edit"

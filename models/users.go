@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres" //initializes postgres drivers
 	"golang.org/x/crypto/bcrypt"
 	"lenslocked.com/hash"
 	"lenslocked.com/rand"
 )
 
+// TODO: config this
 const userPwPepper = "nubis"
 const hmacSecretKey = "secret-hmac-key"
 

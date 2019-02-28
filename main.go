@@ -12,19 +12,10 @@ import (
 	"lenslocked.com/rand"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "$m0kycat"
-	dbname   = "lenslocked_dev"
-)
-
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname,
-	)
-	services, err := models.NewServices(psqlInfo)
+	cfg := DefaultConfig()
+	dbCnfg := DefaultPostgresConfig()
+	services, err := models.NewServices(dbCnfg.Dialect(), dbCnfg.ConnectionInfo())
 	must(err)
 	defer services.Close()
 	services.AutoMigrate()
@@ -35,11 +26,10 @@ func main() {
 	usersC := controllers.NewUsers(services.User)
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
 
-	// TODO: update this var to be a config
-	inProd := false
 	b, err := rand.Bytes(32)
 	must(err)
-	csrfMw := csrf.Protect(b, csrf.Secure(inProd))
+	csrfMw := csrf.Protect(b, csrf.Secure(cfg.InProd()))
+
 	userMw := middleware.User{UserService: services.User}
 	OwnerMw := middleware.Owner{User: userMw}
 
@@ -74,8 +64,9 @@ func main() {
 		Methods("GET").Name(controllers.NamedGalleryShowRoute)
 	r.HandleFunc("/galleries/{id:[0-9]+}/edit", OwnerMw.ApplyFn(galleriesC.Edit)).
 		Methods("GET").Name(controllers.NamedGalleryEditRoute)
+	// TODO: config this
 
-	http.ListenAndServe(":8080", csrfMw(userMw.Apply(r)))
+	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r)))
 }
 
 func must(err error) {
