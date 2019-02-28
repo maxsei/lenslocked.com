@@ -82,9 +82,12 @@ type LoginForm struct {
 // and then log in the user if they are correct
 // POST /login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
 	var form LoginForm
 	if err := parseForm(r, &form); err != nil {
-		panic(err)
+		vd.ErrorAlert(err)
+		u.LoginView.Render(w, r, vd)
+		return
 	}
 	user, err := u.us.Authenticate(form.Email, form.Password)
 	switch err {

@@ -1,8 +1,6 @@
 package views
 
 import (
-	"log"
-
 	"lenslocked.com/models"
 )
 
@@ -39,7 +37,6 @@ func (d *Data) ErrorAlert(err error) {
 		}
 		return
 	}
-	log.Println(err)
 	d.Alert = &Alert{
 		Level:   AlertLvlError,
 		Message: AlertMsgGeneric,
