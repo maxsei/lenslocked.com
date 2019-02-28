@@ -115,7 +115,7 @@ func (g *Galleries) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /galleries/:id/images
-func (g *Galleries) Upload(w http.ResponseWriter, r *http.Request) {
+func (g *Galleries) UploadImages(w http.ResponseWriter, r *http.Request) {
 	gallery, err := g.galleryByID(w, r)
 	if err != nil {
 		return
@@ -125,7 +125,6 @@ func (g *Galleries) Upload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gallery not found", http.StatusNotFound)
 		return
 	}
-	// TODO: parse a mutlipare form
 	var vd views.Data
 	vd.Yeild = gallery
 	err = r.ParseMultipartForm(maxMultipartMem)
@@ -136,25 +135,60 @@ func (g *Galleries) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	files := r.MultipartForm.File["images"]
 	for _, f := range files {
-		file, err := f.Open()
-		if err != nil {
-			vd.ErrorAlert(err)
+		file, ferr := f.Open()
+		if ferr != nil {
+			vd.ErrorAlert(ferr)
 			g.EditView.Render(w, r, vd)
 			return
 		}
-		err = g.is.Create(gallery.ID, file, f.Filename)
+		img := &models.Image{
+			GalleryID: gallery.ID,
+			Filename:  f.Filename,
+		}
+		err = g.is.Create(img, file)
 		if err != nil {
 			vd.ErrorAlert(err)
 			g.EditView.Render(w, r, vd)
 			return
 		}
 	}
-	// g.EditView.Render(w, r, vd)
-	images, err := g.is.ByGalleryID(gallery.ID)
+	url, err := g.r.Get(NamedGalleryEditRoute).URL("id", fmt.Sprintf("%v", gallery.ID))
 	if err != nil {
-		panic(err)
+		http.Redirect(w, r, "/galleries", http.StatusFound)
+		return
 	}
-	fmt.Fprintf(w, "Files: %v\n", images)
+	http.Redirect(w, r, url.Path, http.StatusFound)
+}
+
+// POST /galleries/:id/images/filename/delete
+func (g *Galleries) DeleteImages(w http.ResponseWriter, r *http.Request) {
+	gallery, err := g.galleryByID(w, r)
+	if err != nil {
+		return
+	}
+	user := context.User(r.Context())
+	if gallery.UserID != user.ID {
+		http.Error(w, "Gallery not found", http.StatusNotFound)
+		return
+	}
+	filename := mux.Vars(r)["filename"]
+	img := &models.Image{
+		GalleryID: gallery.ID,
+		Filename:  filename,
+	}
+	if err := g.is.Delete(img); err != nil {
+		var vd views.Data
+		vd.Yeild = gallery
+		vd.ErrorAlert(err)
+		g.EditView.Render(w, r, vd)
+		return
+	}
+	url, err := g.r.Get(NamedGalleryEditRoute).URL("id", fmt.Sprintf("%v", gallery.ID))
+	if err != nil {
+		http.Redirect(w, r, "/galleries", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
 }
 
 // POST /galleries
@@ -184,7 +218,6 @@ func (g *Galleries) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	url, err := g.r.Get(NamedGalleryEditRoute).URL("id", fmt.Sprintf("%v", gallery.ID))
 	if err != nil {
-		//todo make this go to the index page
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
@@ -211,6 +244,8 @@ func (g *Galleries) Delete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
+// galleryByID gets gorilla mux url variables out and returns a gallery with that ID along with
+// all of its images and no error.  If one does not exits with that id it will return nil and an error
 func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models.Gallery, error) {
 	vars := mux.Vars(r)
 	idStr := vars["id"]

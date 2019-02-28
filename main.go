@@ -55,7 +55,8 @@ func main() {
 	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Index)).Methods("GET")
 	r.Handle("/galleries/new", OwnerMw.Apply(galleriesC.New)).Methods("GET")
 	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Create)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/images", OwnerMw.ApplyFn(galleriesC.Upload)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/images", OwnerMw.ApplyFn(galleriesC.UploadImages)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", OwnerMw.ApplyFn(galleriesC.DeleteImages)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/update", OwnerMw.ApplyFn(galleriesC.Update)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/delete", OwnerMw.ApplyFn(galleriesC.Delete)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).

@@ -5,12 +5,29 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
+// Image is not stored in the db
+type Image struct {
+	GalleryID uint
+	Filename  string
+}
+
+// RelPath returns the relative filepath to the associated image in the file system
+func (i *Image) RelPath() string {
+	return "/" + i.RootPath()
+}
+
+// RootPath returns the path starting at the root of the lenslocked project
+// to the associated image in the file system
+func (i *Image) RootPath() string {
+	return fmt.Sprintf("images/galleries/%d/%s", i.GalleryID, i.Filename)
+}
+
 type ImageService interface {
-	Create(galleryID uint, r io.ReadCloser, filename string) error
-	ByGalleryID(galleryID uint) ([]string, error)
+	Create(img *Image, r io.ReadCloser) error
+	ByGalleryID(galleryID uint) ([]Image, error)
+	Delete(img *Image) error
 }
 
 func NewImageService() ImageService {
@@ -19,13 +36,13 @@ func NewImageService() ImageService {
 
 type imageService struct{}
 
-func (is *imageService) Create(galleryID uint, r io.ReadCloser, filename string) error {
+func (is *imageService) Create(img *Image, r io.ReadCloser) error {
 	defer r.Close()
-	path, err := is.mkImagePath(galleryID)
+	path, err := is.mkImagePath(img.GalleryID)
 	if err != nil {
 		return err
 	}
-	dst, err := os.Create(path + filename)
+	dst, err := os.Create(path + img.Filename)
 	if err != nil {
 		return err
 	}
@@ -37,17 +54,21 @@ func (is *imageService) Create(galleryID uint, r io.ReadCloser, filename string)
 	return nil
 }
 
-func (is *imageService) ByGalleryID(galleryID uint) ([]string, error) {
+func (is *imageService) ByGalleryID(galleryID uint) ([]Image, error) {
 	path := is.imagePath(galleryID)
 	paths, err := filepath.Glob(path + "*")
-	for i := range paths {
-		paths[i] = "/" + paths[i]
-		paths[i] = strings.Replace(paths[i], "\\", "/", -1)
-	}
 	if err != nil {
 		return nil, err
 	}
-	return paths, nil
+	images := make([]Image, len(paths))
+	for i := range paths {
+		images[i].Filename = filepath.Base(paths[i])
+		images[i].GalleryID = galleryID
+	}
+	return images, nil
+}
+func (is *imageService) Delete(img *Image) error {
+	return os.Remove(img.RootPath())
 }
 
 func (is *imageService) imagePath(galleryID uint) string {

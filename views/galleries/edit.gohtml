@@ -39,6 +39,14 @@
     </form>
 {{end}}
 
+{{define "deleteImageForm"}}
+    <div class="offset-sm-5">
+        <form action="/galleries/{{.GalleryID}}/images/{{.Filename}}/delete" method="POST" style="padding-top:20px;" >
+          <button type="submit" class="btn btn-light">Delete Image</button>
+        </form>
+    </div>
+{{end}}
+
 {{define "galleryImages"}}
     <div class="row">
         <label for="Images" class="ml-5 col-sm-2">Images</label>
@@ -47,9 +55,10 @@
         <div class="row">
             {{range .}}
                 <div class="col-md-2">
-                    <a href="{{.}}">
-                        <img src="{{.}}" class="thumbnail">
+                    <a href="{{.RelPath}}">
+                        <img src="{{.RelPath}}" class="thumbnail">
                     </a>
+                    {{template "deleteImageForm" .}}
                 </div>
             {{end}}
         </div>
@@ -57,6 +66,7 @@
     <style >
     img.thumbnail{
         width: 100%;
+        margin-bottom: 6px;
     }
     </style>
 {{end}}
