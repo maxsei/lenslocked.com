@@ -44,7 +44,7 @@
 
 {{define "deleteImageForm"}}
     <div class="offset-sm-5">
-        <form action="/galleries/{{.GalleryID}}/images/{{.Filename}}/delete" method="POST" style="padding-top:20px;" >
+        <form action="/galleries/{{.GalleryID}}/images/{{.Filename | urlquery}}/delete" method="POST" style="padding-top:20px;" >
             {{csrfField}}
             <button type="submit" class="btn btn-light">Delete Image</button>
         </form>

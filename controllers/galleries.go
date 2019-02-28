@@ -134,6 +134,7 @@ func (g *Galleries) UploadImages(w http.ResponseWriter, r *http.Request) {
 		g.EditView.Render(w, r, vd)
 		return
 	}
+	// nonFileNames := make([]string, 0)
 	files := r.MultipartForm.File["images"]
 	for _, f := range files {
 		file, ferr := f.Open()
@@ -142,6 +143,10 @@ func (g *Galleries) UploadImages(w http.ResponseWriter, r *http.Request) {
 			g.EditView.Render(w, r, vd)
 			return
 		}
+		// if invalidExension(f.Filename) {
+		// 	nonFileNames = append(nonFileNames, f.Filename)
+		// 	continue
+		// }
 		img := &models.Image{
 			GalleryID: gallery.ID,
 			Filename:  f.Filename,
@@ -153,6 +158,11 @@ func (g *Galleries) UploadImages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// if len(nonFileNames) > 0 {
+	// 	vd.ErrorAlert(fmt.Errorf("The file(s) were not uploaded due to unsupported file types: %v", nonFileNames))
+	// 	g.EditView.Render(w, r, vd)
+	// 	return
+	// }
 	url, err := g.r.Get(NamedGalleryEditRoute).URL("id", fmt.Sprintf("%v", gallery.ID))
 	if err != nil {
 		http.Redirect(w, r, "/galleries", http.StatusFound)

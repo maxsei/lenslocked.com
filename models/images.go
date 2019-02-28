@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -15,7 +16,10 @@ type Image struct {
 
 // RelPath returns the relative filepath to the associated image in the file system
 func (i *Image) RelPath() string {
-	return "/" + i.RootPath()
+	temp := url.URL{
+		Path: "/" + i.RootPath(),
+	}
+	return temp.String()
 }
 
 // RootPath returns the path starting at the root of the lenslocked project
