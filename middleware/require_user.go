@@ -25,6 +25,7 @@ func (mw *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 			next(w, r)
 			return
 		}
+		// fmt.Println(r.URL.Path)
 		cookie, err := r.Cookie("remember_token")
 		if err != nil {
 			next(w, r)
@@ -43,7 +44,10 @@ func (mw *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Owner assumes that User middleware has already
-// been run otherwise it will not work correctly
+// been run otherwise it will not work correctly.
+// Redirects user to login page if they are viewing something
+// they do not have access to as they need to be the owner of the
+// content they wish to view
 type Owner struct {
 	User
 }
@@ -57,7 +61,7 @@ func (mw *Owner) Apply(next http.Handler) http.HandlerFunc {
 // ApplyFn assumes that User middleware has already
 // been run otherwise it will not work correctly
 func (mw *Owner) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
-	return mw.User.ApplyFn(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := context.User(r.Context())
 		if user == nil {
 			http.Redirect(w, r, "/login", http.StatusFound)

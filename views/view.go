@@ -3,6 +3,7 @@ package views
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -56,6 +57,7 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // if no data is not of type views.Data then create a new one with yeild data
 // as the data passedinto the Render method
 func (v View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
+	fmt.Println(r.URL.Path)
 	w.Header().Set("Content-Type", "text/html")
 	var vd Data
 	switch d := data.(type) {
