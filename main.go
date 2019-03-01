@@ -13,9 +13,16 @@ import (
 )
 
 func main() {
+
 	cfg := DefaultConfig()
 	dbCnfg := DefaultPostgresConfig()
-	services, err := models.NewServices(dbCnfg.Dialect(), dbCnfg.ConnectionInfo())
+	services, err := models.NewServices(
+		models.WithGorm(dbCnfg.Dialect(), dbCnfg.ConnectionInfo()),
+		models.WithUser(cfg.Pepper, cfg.HMACKey),
+		models.WithGallery(),
+		models.WithImage(),
+		models.WithLogMode(!cfg.InProd()),
+	)
 	must(err)
 	defer services.Close()
 	services.AutoMigrate()

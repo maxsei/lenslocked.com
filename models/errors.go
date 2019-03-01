@@ -3,6 +3,8 @@ package models
 import "strings"
 
 const (
+	// ErrNoDBConnection is when no database connection is established
+	ErrNoDBConnection modelError = "models : no db connection found when required"
 	// ErrNotFound is when we cannot find a thing in our database
 	ErrNotFound modelError = "models: resource not found"
 	// ErrPasswordIncorrect describes	 when the user logs in with an incorrect passwrod

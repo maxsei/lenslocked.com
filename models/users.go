@@ -10,10 +10,6 @@ import (
 	"lenslocked.com/rand"
 )
 
-// TODO: config this
-const userPwPepper = "nubis"
-const hmacSecretKey = "secret-hmac-key"
-
 // User is a type that represents user model stored in our database
 // and is used for user accounts, storying email and password info
 type User struct {
@@ -27,11 +23,12 @@ type User struct {
 }
 
 // NewUserService creates a new connections to the database
-func NewUserService(db *gorm.DB) UserService {
+func NewUserService(db *gorm.DB, pepper, hmacKey string) UserService {
 	ug := &userGorm{db}
-	hmac := hash.NewHMAC(hmacSecretKey)
-	uv := newUserValidator(ug, hmac)
+	hmac := hash.NewHMAC(hmacKey)
+	uv := newUserValidator(ug, pepper, hmac)
 	return &userService{
+		pepper: pepper,
 		UserDB: uv,
 	}
 }
@@ -55,7 +52,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 		return nil, err
 	}
 	foundPasswordBytes := []byte(foundUser.PasswordHash)
-	enteredPasswordBytes := []byte(password + userPwPepper)
+	enteredPasswordBytes := []byte(password + us.pepper)
 	err = bcrypt.CompareHashAndPassword(foundPasswordBytes, enteredPasswordBytes)
 	switch err {
 	case bcrypt.ErrMismatchedHashAndPassword:
@@ -85,6 +82,7 @@ type UserDB interface {
 var _ UserService = &userService{}
 
 type userService struct {
+	pepper string
 	UserDB
 }
 
@@ -92,9 +90,10 @@ var _ UserDB = &userValidator{}
 
 // newUserValidator creates a new userValidator with a userDB, hmac,
 // and regular expression for emails that need to be matched
-func newUserValidator(udb UserDB, hmac hash.HMAC) *userValidator {
+func newUserValidator(udb UserDB, pepper string, hmac hash.HMAC) *userValidator {
 	return &userValidator{
 		UserDB:     udb,
+		pepper:     pepper,
 		hmac:       hmac,
 		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
 	}
@@ -102,6 +101,7 @@ func newUserValidator(udb UserDB, hmac hash.HMAC) *userValidator {
 
 type userValidator struct {
 	UserDB
+	pepper     string
 	hmac       hash.HMAC
 	emailRegex *regexp.Regexp
 }
@@ -205,7 +205,7 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 	if user.Password == "" {
 		return nil
 	}
-	pwBytes := []byte(user.Password + userPwPepper)
+	pwBytes := []byte(user.Password + uv.pepper)
 	hashBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
 	if err != nil {
 		return err

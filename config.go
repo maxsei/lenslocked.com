@@ -46,15 +46,19 @@ func (c PostgresConfig) ConnectionInfo() string {
 // host port on 8080 and the environment of the application in development
 func DefaultConfig() Config {
 	return Config{
-		Port: 8080,
-		Env:  "dev",
+		Port:    8080,
+		Env:     "dev",
+		Pepper:  "nubis",
+		HMACKey: "secret-hmac-key",
 	}
 }
 
 // Config is responsible for configuring aspects of the applications environment
 type Config struct {
-	Port int
-	Env  string
+	Port    int    `json:"port"`
+	Env     string `json:"env"`
+	Pepper  string `json:"pepper"`
+	HMACKey string `json:"hmac_key"`
 }
 
 // IsProd looks at the config's Env and if it equals "prod"
