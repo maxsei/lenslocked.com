@@ -4,8 +4,8 @@ import "fmt"
 
 // DefaultPostgresConfig returns a PostgresConfig that has all of the default
 // connection info to connect to the db in development
-func DefaultPostgresConfig() PostgresConfig {
-	return PostgresConfig{
+func DefaultPostgresConfig() DatabaseConfig {
+	return DatabaseConfig{
 		Host:     "localhost",
 		Port:     5432,
 		User:     "postgres",
@@ -14,9 +14,9 @@ func DefaultPostgresConfig() PostgresConfig {
 	}
 }
 
-// PostgresConfig is a type that turns a json configuration into a
+// DatabaseConfig is a type that turns a json configuration into a
 // go struct to be used to configure the postgres database connection
-type PostgresConfig struct {
+type DatabaseConfig struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	User     string `json:"user"`
@@ -25,13 +25,13 @@ type PostgresConfig struct {
 }
 
 // Dialect returns the postgres dialect as a string
-func (c PostgresConfig) Dialect() string {
+func (c DatabaseConfig) Dialect() string {
 	return "postgres"
 }
 
 // ConnectionInfo returns the connections info required by gorm to connect to the
 // posgres database
-func (c PostgresConfig) ConnectionInfo() string {
+func (c DatabaseConfig) ConnectionInfo() string {
 	if c.Password == "" {
 		return fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable",
 			c.Host, c.Port, c.User, c.Name,
