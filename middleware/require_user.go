@@ -25,7 +25,6 @@ func (mw *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 			next(w, r)
 			return
 		}
-		// fmt.Println(r.URL.Path)
 		cookie, err := r.Cookie("remember_token")
 		if err != nil {
 			next(w, r)

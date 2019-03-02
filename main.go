@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -13,8 +14,11 @@ import (
 )
 
 func main() {
+	cfgReq := flag.Bool("prod", false, "set to true in production to ensure that a .config is used when provided")
+	flag.Parse()
 
-	cfg := DefaultConfig()
+	cfg, err := LoadConfig(*cfgReq)
+	must(err)
 	dbCnfg := DefaultPostgresConfig()
 	services, err := models.NewServices(
 		models.WithGorm(dbCnfg.Dialect(), dbCnfg.ConnectionInfo()),
@@ -73,6 +77,7 @@ func main() {
 		Methods("GET").Name(controllers.NamedGalleryEditRoute)
 	// TODO: config this
 
+	fmt.Printf("listening and serving on port %d\n", cfg.Port)
 	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r)))
 }
 

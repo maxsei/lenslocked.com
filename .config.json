@@ -1,0 +1,13 @@
+{
+	"port": 8080,
+	"env": "dev",
+	"pepper": "nubis",
+	"hmac_key": "secret-hmac-key",
+	"database": {
+		"host": "localhost",
+		"port": 5432,
+		"user": "postgres",
+		"password": "$m0kycat",
+		"name": "lenslocked_dev"
+	}
+}
