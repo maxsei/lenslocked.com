@@ -42,7 +42,7 @@ func main() {
 	csrfMw := csrf.Protect(b, csrf.Secure(cfg.InProd()))
 
 	userMw := middleware.User{UserService: services.User}
-	OwnerMw := middleware.Owner{User: userMw}
+	ownerMw := middleware.Owner{User: userMw}
 
 	/*
 		Remember routes are prioritized on a first come first serve basis
@@ -56,6 +56,7 @@ func main() {
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.Handle("/login", usersC.LoginView).Methods("GET")
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
+	r.HandleFunc("/logout", ownerMw.ApplyFn(usersC.Logout)).Methods("POST")
 	// FileServer for static assets
 	assetHandler := http.FileServer(http.Dir("./assets/"))
 	assetHandler = http.StripPrefix("/assets/", assetHandler)
@@ -64,20 +65,23 @@ func main() {
 	imageHandler := http.FileServer(http.Dir("./images/"))
 	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", imageHandler))
 	// Gallery Routes
-	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Index)).Methods("GET")
-	r.Handle("/galleries/new", OwnerMw.Apply(galleriesC.New)).Methods("GET")
-	r.HandleFunc("/galleries", OwnerMw.ApplyFn(galleriesC.Create)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/images", OwnerMw.ApplyFn(galleriesC.UploadImages)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", OwnerMw.ApplyFn(galleriesC.DeleteImages)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/update", OwnerMw.ApplyFn(galleriesC.Update)).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}/delete", OwnerMw.ApplyFn(galleriesC.Delete)).Methods("POST")
+	r.HandleFunc("/galleries", ownerMw.ApplyFn(galleriesC.Index)).Methods("GET")
+	r.Handle("/galleries/new", ownerMw.Apply(galleriesC.New)).Methods("GET")
+	r.HandleFunc("/galleries", ownerMw.ApplyFn(galleriesC.Create)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/images", ownerMw.ApplyFn(galleriesC.UploadImages)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", ownerMw.ApplyFn(galleriesC.DeleteImages)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/update", ownerMw.ApplyFn(galleriesC.Update)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/delete", ownerMw.ApplyFn(galleriesC.Delete)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).
 		Methods("GET").Name(controllers.NamedGalleryShowRoute)
-	r.HandleFunc("/galleries/{id:[0-9]+}/edit", OwnerMw.ApplyFn(galleriesC.Edit)).
+	r.HandleFunc("/galleries/{id:[0-9]+}/edit", ownerMw.ApplyFn(galleriesC.Edit)).
 		Methods("GET").Name(controllers.NamedGalleryEditRoute)
 	// TODO: config this
 
-	fmt.Printf("listening and serving on port %d\n", cfg.Port)
+	// make sure to run go run "$GOROOT/src/crypto/tls/generate_cert.go" --host=localhost
+	// to make this work in development
+	fmt.Printf("listening and serving localhost:%d\n", cfg.Port)
+	// fmt.Printf("listening and serving on port %d\n", cfg.Port)
 	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r)))
 }
 

@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"lenslocked.com/context"
 	"lenslocked.com/models"
@@ -15,6 +16,14 @@ type User struct {
 func (mw *User) Apply(next http.Handler) http.HandlerFunc {
 	return mw.ApplyFn(next.ServeHTTP)
 }
+
+// ApplyFn will apply middleware to all users.  First it checks if the user is
+// fetching static images or assets which are permitted everywhere and any
+// user can load them without being looked up in the db.  Then cookies are
+// checked for all other requests by getting the remember_token value.  If the
+// cookie is expired it will redirect the next handler will be run without a user
+// being set otherwise the cookies expiration date will be set to an hour from
+// the time they try to access a page on the server.  User is then qu
 func (mw *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -30,6 +39,7 @@ func (mw *User) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 			next(w, r)
 			return
 		}
+		cookie.Expires = time.Now().Add(time.Hour)
 		user, err := mw.ByRemember(cookie.Value)
 		if err != nil {
 			next(w, r)

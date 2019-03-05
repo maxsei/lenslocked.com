@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"lenslocked.com/context"
 	"lenslocked.com/models"
 	"lenslocked.com/rand"
 	"lenslocked.com/views"
@@ -78,6 +80,26 @@ type LoginForm struct {
 	Password string `schema:"password"`
 }
 
+// Logout form will delete the remember_token in the users browser and
+// set the remember token for the user to some new value in the db.
+// Finally it redirects the user to the homepage
+func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{
+		Name:     "remember_token",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	user := context.User(r.Context())
+	token, _ := rand.RememberToken()
+	user.Remember = token
+	u.us.Update(user)
+
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
 // Login is used to verify the provided email addres and password
 // and then log in the user if they are correct
 // POST /login
@@ -112,7 +134,8 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/galleries", http.StatusFound)
 }
 
-// signIn creates a cookie for the user from their email
+// signIn creates a cookie for the user using their email that expires an hour
+// after not refreshing the page.  This function is called for /login and /singup routes
 func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 	if user.Remember == "" {
 		token, err := rand.RememberToken()
@@ -128,6 +151,7 @@ func (u *Users) signIn(w http.ResponseWriter, user *models.User) error {
 	cookie := http.Cookie{
 		Name:     "remember_token",
 		Value:    user.Remember,
+		Expires:  time.Now().Add(time.Hour),
 		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)

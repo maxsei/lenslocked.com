@@ -20,13 +20,27 @@
       {{end}}
     </ul >
     <ul class="nav navbar-nav navbar-right">
-        <li class="nav-item">
-          <a class="nav-link" href="/signup">Sign Up</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/login">Login</a>
-        </li>
+        {{if .User}}
+        <li class="nav-item">{{template "signOutForm"}}</li>
+        {{else}}
+            <li class="nav-item">
+                <a class="nav-link" href="/signup">Sign Up</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/login">Login</a>
+            </li>
+        {{end}}
     </ul>
   </div>
 </nav>
+{{end}}
+
+{{define "signOutForm"}}
+<!-- <a class="nav-link" type="submit"> -->
+    <form id="signout" action="/logout" method="POST">
+        {{csrfField}}
+        <!-- <button class="nav-link" type="submit">Log out</button> -->
+        <a class="nav-link" href="#"onclick="document.getElementById('signout').submit();">Log out</a>
+    </form>
+<!-- </a> -->
 {{end}}
