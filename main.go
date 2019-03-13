@@ -19,7 +19,7 @@ func main() {
 
 	cfg, err := LoadConfig(*cfgReq)
 	must(err)
-	dbCnfg := DefaultPostgresConfig()
+	dbCnfg := cfg.Database
 	services, err := models.NewServices(
 		models.WithGorm(dbCnfg.Dialect(), dbCnfg.ConnectionInfo()),
 		models.WithUser(cfg.Pepper, cfg.HMACKey),

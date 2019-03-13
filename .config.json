@@ -6,7 +6,7 @@
 	"database": {
 		"host": "localhost",
 		"port": 5432,
-		"user": "postgres",
+		"user": "ubuntu",
 		"password": "$m0kycat",
 		"name": "lenslocked_dev"
 	}
